@@ -7,6 +7,7 @@ const getRoute = require("./routes/getRoute");
 
 const PORT = 3000;
 
+database._connect();
 app.use(bodyParser.urlencoded({ extended: true }));
 console.log("Connected to body parser");
 app.use(bodyParser.json());

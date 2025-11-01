@@ -63,15 +63,12 @@
 
           // Created the form - to store data as form
           try {
-            const formData = new FormData();
-            formData.append("username", inputValues);
-
-            // Form data Looks like
-            console.log("Form Data", formData);
-
             const res = await fetch("http://localhost:3000/api/users", {
               method: "POST",
-              body: formData,
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: `username=${encodeURIComponent(inputValues)}`,
             });
 
             if (!res.ok) {
@@ -91,22 +88,27 @@
         exerciseForm.addEventListener("submit", async (e) => {
           e.preventDefault();
 
-          const id = userId.value;
-          const des = description.value;
-          const dur = duration.value;
-          const time = date.value;
-
-          const formData = new FormData();
-
-          formData.append("description", des);
-          formData.append("duration", dur);
-          formData.append("date", time);
+          const reqData = {
+            userId: userId.value,
+            description: description.value,
+            duration: duration.value,
+            time: date.value,
+          };
 
           const res = await fetch(
-            `http://localhost:3000/api/users/${id}/exercises`,
+            `http://localhost:3000/api/users/${reqData.userId}/exercises`,
             {
               method: "POST",
-              body: formData,
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: `&userId=${encodeURIComponent(
+                reqData.userId
+              )}&description=${encodeURIComponent(
+                reqData.description
+              )}&duration=${encodeURIComponent(
+                reqData.duration
+              )}&date=${encodeURIComponent(reqData.time)}`,
             }
           );
 
@@ -116,7 +118,7 @@
 
           const data = await res.json();
           console.log(data);
-          window.location.href = `/api/users/${id}/logs`;
+          window.location.href = `/api/users/${reqData.userId}/exercises`;
         });
       });
     </script>

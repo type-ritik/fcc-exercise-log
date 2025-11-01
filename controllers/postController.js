@@ -3,97 +3,65 @@ const User = require("../models/userModel");
 const Exercise = require("../models/exerciseModel");
 
 async function createUser(req, res) {
-  try {
-    const { username } = req.body;
+  // try {
+  console.log("Creating User...");
+  var { username } = req.body;
 
-    const reqUser = await User.findOne({ username });
+  const existingUser = await User.collection.findOne({ username: username });
 
-    console.log(reqUser);
-    if (isNaN(reqUser)) {
-      app.locals.userId = reqUser._id;
-      res.json({
-        username: reqUser.username,
-        _id: reqUser._id,
-      });
-    } else {
-      const newUser = new User({
-        username,
-      });
+  if (existingUser) {
+    app.locals.userId = existingUser._id;
+    res.json({
+      username: existingUser.username,
+      _id: existingUser._id,
+    });
+  } else {
+    const newUser = await User.collection.insertOne({
+      username,
+    });
 
-      const userDoc = await newUser.save();
+    console.log("New User Created");
+    app.locals.userId = newUser.insertedId;
 
-      app.locals.userId = userDoc._id;
-
-      res.json({
-        username: userDoc.username,
-        _id: userDoc._id,
-      });
-    }
-  } catch (err) {
-    console.error("Server Error", err.message);
-    throw new Error("Server Side Error", err.message);
+    res.json({
+      username: username,
+      _id: newUser.insertedId,
+    });
   }
 }
 
 async function addExercise(req, res) {
-  try {
-    // Parsed id from params & body
-    const id = req.params._id;
-    const { description, duration, date } = req.body;
+  const { userId, description, duration, date } = req.body;
+  console.log("Adding Exercise...", userId, description, duration, date);
 
-    // split the date
-    const [year, month, day] = date.split("-");
+  const [year, month, day] = date.split("-");
+  const parsedDate = new Date(`${year}-${month}-${day}`);
 
-    // make the date to 25 July 1025 like
-    const parsedDate = new Date(`${year}-${month}-${day}`);
-    console.log(parsedDate);
+  const newExercise = await Exercise.collection.insertOne({
+    userId,
+    description,
+    duration: parseInt(duration),
+    date: parsedDate.toDateString(),
+  });
 
-    // Create new Entry of Exercise
-    const newExercise = new Exercise({
-      userId: id,
+  console.log("New Exercise Created:", newExercise);
+
+  const count = await Exercise.collection.countDocuments({ userId: userId });
+
+  console.log("Exercise Count:", count);
+
+  const myUser = await User.findById(userId);
+
+  res.json({
+    _id: myUser._id,
+    username: myUser.username,
+    count: count,
+    log: {
       description: description,
-      duration: duration,
+      duration: parseInt(duration),
       date: parsedDate.toDateString(),
-    });
-
-    // Save the entry
-    const exeDoc = await newExercise.save();
-
-    // Count the entry
-    const count = await Exercise.aggregate([
-      {
-        $group: {
-          _id: `${id}`,
-          count: { $sum: 1 }, // this means that the count will increment by 1
-        },
-      },
-    ]);
-
-    // Retrieve the user data
-    const user = await User.findOne({ _id: id });
-
-    // Create logs
-    const log = [];
-    const obj = {};
-    obj["description"] = exeDoc.description;
-    obj["duration"] = exeDoc.duration;
-    obj["date"] = exeDoc.date.toDateString();
-    log.push(obj);
-
-    // Save the locals data
-    app.locals.exerciseId = exeDoc._id;
-
-    // Correct response
-    res.json({
-      username: user.username,
-      count: count[0].count,
-      _id: user._id,
-      log: log,
-    });
-  } catch (err) {
-    console.error("Server Error ", err.message);
-    throw new Error("Server Error: ", err.message);
-  }
+    },
+  });
 }
 
 module.exports = {

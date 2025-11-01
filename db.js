@@ -2,20 +2,22 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const MONGO_URI = process.env.MONGO_URI;
+console.log(MONGO_URI);
 class Database {
   constructor() {
-    this._connent();
+    this._connect();
   }
 
-  _connent() {
-    mongoose
-      .connect(MONGO_URI)
-      .then(() => {
+  _connect() {
+    try {
+      const connect = mongoose.connect(MONGO_URI);
+
+      connect.then(() => {
         console.log("Database connection successful");
-      })
-      .catch((err) => {
-        console.error("Database connection error.");
       });
+    } catch (error) {
+      console.error("Database connection error:", error);
+    }
   }
 }
 
