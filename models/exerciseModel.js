@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ExerciseSchema = mongoose.Schema({
+const ExerciseSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User", // this is the "foreign key" reference

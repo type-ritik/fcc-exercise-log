@@ -31,8 +31,13 @@ async function createUser(req, res) {
 }
 
 async function addExercise(req, res) {
-  const { userId, description, duration, date } = req.body;
-  console.log("Adding Exercise...", userId, description, duration, date);
+  const { userId, description, duration } = req.body;
+  var date = req.body.date;
+
+  if (!date) {
+    date = new Date().toISOString().split("T")[0];
+    console.log(date);
+  }
 
   const [year, month, day] = date.split("-");
   const parsedDate = new Date(`${year}-${month}-${day}`);
@@ -51,9 +56,10 @@ async function addExercise(req, res) {
   console.log("Exercise Count:", count);
 
   const myUser = await User.findById(userId);
+  console.log("User Found:", myUser);
 
   res.json({
-    _id: myUser._id,
+    _id: myUser.id,
     username: myUser.username,
     count: count,
     log: {
