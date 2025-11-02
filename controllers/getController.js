@@ -24,21 +24,31 @@ async function showUser(req, res) {
 }
 
 async function showExerciseLogs(req, res) {
-  const id = req.params._id;
-  const user = await User.findById(id);
+  const userId = req.params._id;
+  const user = await User.findById(userId);
   if (!user) return res.status(404).json({ error: "User not found" });
 
-  const exeId = app.locals.exerciseId;
-  const exercise = await Exercise.findById(exeId);
+  const exercises = await Exercise.collection.find({ userId: userId });
 
-  if (!exeId) return res.status(404).json({ error: "Exercise not found" });
+  if (!exercises)
+    return res.status(404).json({ error: "No exercises found for this user" });
 
-  res.send({
+  const log = await exercises.toArray();
+  console.log(log);
+
+  const formattedLog = log.map((exercise) => ({
+    description: exercise.description,
+    duration: exercise.duration,
+    date: exercise.date,
+  }));
+
+  console.log(formattedLog)
+
+  res.json({
     _id: user._id,
     username: user.username,
-    date: exercise.date.toDateString(),
-    duration: exercise.duration,
-    description: exercise.description,
+    count: formattedLog.length,
+    log: formattedLog,
   });
 }
 
